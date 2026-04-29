@@ -17,6 +17,7 @@ const ScanPage = () => {
     schedulerIntervalHours: 60,
     schedulerStartTime: '07:00',
     schedulerEndTime: '17:00',
+    schedulerTitleFilter: '',
   });
   const [schedulerSaving, setSchedulerSaving] = useState(false);
   const [schedulerMsg, setSchedulerMsg] = useState('');
@@ -50,6 +51,7 @@ const ScanPage = () => {
             schedulerIntervalHours: d.schedulerIntervalHours || 60,
             schedulerStartTime: d.schedulerStartTime || '07:00',
             schedulerEndTime: d.schedulerEndTime || '17:00',
+            schedulerTitleFilter: d.schedulerTitleFilter || '',
           });
         }
       } catch (err) { console.error(err); }
@@ -64,6 +66,7 @@ const ScanPage = () => {
         ...updates,
         schedulerKeywords: keywords,
         schedulerPortals: selectedPortals.join(','),
+        schedulerTitleFilter: updates.schedulerTitleFilter !== undefined ? updates.schedulerTitleFilter : scheduler.schedulerTitleFilter,
       };
       const res = await updateSettings(payload);
       if (res.data.success) {
@@ -330,6 +333,24 @@ const ScanPage = () => {
             </div>
           )}
 
+          {scheduler.schedulerEnabled && (
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">Title Filter (strict match)</label>
+              <input
+                type="text"
+                value={scheduler.schedulerTitleFilter || ''}
+                onChange={(e) => {
+                  setScheduler({ ...scheduler, schedulerTitleFilter: e.target.value });
+                }}
+                onBlur={(e) => {
+                  saveScheduler({ ...scheduler, schedulerTitleFilter: e.target.value });
+                }}
+                placeholder="e.g. .net developer"
+                className="h-10 w-full rounded-lg border border-white/20 bg-white/5 backdrop-blur px-3 text-sm text-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              />
+              <p className="mt-1.5 text-xs text-slate-500">Only jobs whose title contains all these words will be applied to. Leave blank to apply to all matching keyword results.</p>
+            </div>
+          )}
           {schedulerMsg && (
             <p className="text-xs text-green-400 mt-3">{schedulerMsg}</p>
           )}

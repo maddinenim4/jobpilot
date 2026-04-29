@@ -72,7 +72,7 @@ public class NvoidsScraper implements JobScraper {
             int rowsRejectedByKeyword = 0;
             for (Element row : rows) {
                 rowsChecked++;
-                if (jobLinks.size() >= 20) break; // collect up to 20 matching jobs
+                if (jobLinks.size() >= 100) break; // collect up to 20 matching jobs
 
                 Elements cells = row.select("td");
                 if (cells.size() < 2) continue;

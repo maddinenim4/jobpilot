@@ -14,6 +14,7 @@ const SettingsPage = () => {
     schedulerEndTime: '17:00',
     schedulerKeywords: '.NET Developer',
     schedulerPortals: 'Nvoids',
+    schedulerTitleFilter: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -38,6 +39,7 @@ const SettingsPage = () => {
             schedulerEndTime: data.schedulerEndTime || '17:00',
             schedulerKeywords: data.schedulerKeywords || '.NET Developer',
             schedulerPortals: data.schedulerPortals || 'Nvoids',
+            schedulerTitleFilter: data.schedulerTitleFilter || '',
           });
         }
       } catch (err) {
@@ -221,6 +223,15 @@ const SettingsPage = () => {
                       Available: Nvoids, Hiring42, Robert Half, Randstad, Insight Global, TEKsystems, Apex Systems, Kforce, Collabera, Beacon Hill, Dice
                     </p>
                   </div>
+                  <div>
+                  <label className="block text-sm font-medium text-slate-200 mb-2">
+                    Title Filter (strict match)
+                  </label>
+                  <input type="text" name="schedulerTitleFilter" value={form.schedulerTitleFilter || ''} onChange={handleChange} placeholder="e.g. .net developer" className={inputClass} />
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    Only jobs whose title contains all these words will be applied to. Leave blank to apply to all matched jobs.
+                  </p>
+                </div>
                 </div>
               )}
             </div>

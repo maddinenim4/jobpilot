@@ -97,6 +97,9 @@ public class UserService {
         if (request.getSchedulerPortals() != null) {
             user.setSchedulerPortals(request.getSchedulerPortals());
         }
+        if (request.getSchedulerTitleFilter() != null) {
+            user.setSchedulerTitleFilter(request.getSchedulerTitleFilter());
+        }
 
         return userRepository.save(user);
     }

@@ -17,9 +17,17 @@ import java.util.List;
 public class JobController {
 
     private final JobService jobService;
-
-    public JobController(JobService jobService) {
+    private final com.jobpilot.backend.service.AiService aiService;
+    private final com.jobpilot.backend.service.UserService userService;
+    private final com.jobpilot.backend.config.EncryptionUtil encryptionUtil;
+    public JobController(JobService jobService,
+                         com.jobpilot.backend.service.AiService aiService,
+                         com.jobpilot.backend.service.UserService userService,
+                         com.jobpilot.backend.config.EncryptionUtil encryptionUtil) {
         this.jobService = jobService;
+        this.aiService = aiService;
+        this.userService = userService;
+        this.encryptionUtil = encryptionUtil;
     }
 
     @PostMapping("/scan")
@@ -185,10 +193,24 @@ public class JobController {
                         .body(new ApiResponse(false, "Recruiter email is required", null));
             }
 
+            // Auto-extract title and location from JD using AI
+            com.jobpilot.backend.model.User currentUser = userService.getUserByUsername(username);
+            String aiKey = encryptionUtil.decrypt(currentUser.getAiApiKey());
+            String aiModel = currentUser.getAiModelType();
+            String extractedTitle = "Position";
+            String extractedLocation = "Remote";
+            try {
+                extractedTitle = aiService.extractJobTitleFromJD(jobDescription, aiKey, aiModel);
+                extractedLocation = aiService.extractLocationFromJD(jobDescription, aiKey, aiModel);
+                System.out.println("Quick Apply extracted — Title: " + extractedTitle + ", Location: " + extractedLocation);
+            } catch (Exception e) {
+                System.err.println("Failed to extract title/location: " + e.getMessage());
+            }
+
             JobPosting job = JobPosting.builder()
-                    .jobTitle(jobTitle != null ? jobTitle : "Position")
-                    .company(company != null ? company : "Company")
-                    .location(location != null ? location : "Remote")
+                    .jobTitle(extractedTitle)
+                    .company(company != null && !company.isBlank() ? company : "Company")
+                    .location(extractedLocation)
                     .jobDescription(jobDescription)
                     .recruiterEmail(recruiterEmail)
                     .sourceSite("Manual")

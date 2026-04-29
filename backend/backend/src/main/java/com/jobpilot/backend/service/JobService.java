@@ -88,7 +88,7 @@ public class JobService {
 
         Resume bestResume = aiService.selectBestResume(resumes, job.getJobDescription(), apiKey, aiProvider);
 
-        String emailSubject = aiService.generateEmailSubject(job.getJobTitle(), job.getCompany(), apiKey, aiProvider);
+        String emailSubject = aiService.generateEmailSubject(job.getJobTitle(), job.getCompany(), job.getLocation(), job.getJobDescription(), apiKey, aiProvider);
         String emailBody = aiService.generateEmailBody(
                 job.getJobDescription(), bestResume.getExtractedText(),
                 job.getRecruiterEmail(), apiKey, aiProvider);

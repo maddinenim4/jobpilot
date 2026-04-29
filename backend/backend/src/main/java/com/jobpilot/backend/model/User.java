@@ -39,6 +39,7 @@ public class User {
     private String schedulerEndTime;
     private String schedulerKeywords;
     private String schedulerPortals;
+    private String schedulerTitleFilter;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -89,6 +89,22 @@ public class SchedulerService {
 
                     try {
                         List<JobPosting> jobs = jobService.scrapeSelectedPortals(portals, trimmedKeyword, null);
+                        // Apply title filter if set
+                        String titleFilter = user.getSchedulerTitleFilter();
+                        if (titleFilter != null && !titleFilter.isBlank()) {
+                            String[] titleWords = titleFilter.toLowerCase().trim().split("\\s+");
+                            jobs = jobs.stream()
+                                    .filter(j -> {
+                                        if (j.getJobTitle() == null) return false;
+                                        String tLower = j.getJobTitle().toLowerCase();
+                                        for (String word : titleWords) {
+                                            if (!tLower.contains(word)) return false;
+                                        }
+                                        return true;
+                                    })
+                                    .toList();
+                            System.out.println("  After scheduler title filter '" + titleFilter + "': " + jobs.size() + " jobs remain");
+                        }
                         System.out.println("  Scheduler found " + jobs.size() + " jobs for keyword: " + trimmedKeyword);
 
                         // Filter: only jobs posted AFTER the scheduler start time today
