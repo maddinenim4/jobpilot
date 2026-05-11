@@ -161,8 +161,9 @@ public class NvoidsScraper implements JobScraper {
                         continue;
                     }
 
-                    String resumePath = bestResume.get().getFilePath();
-                    System.out.println("Using resume: " + bestResume.get().getFileName());
+                    String resumeFileName = bestResume.get().getFileName();
+                    Long resumeId = bestResume.get().getId();
+                    System.out.println("Using resume: " + resumeFileName + " (id: " + resumeId + ")");
 
                     String company = extractCompanyFromEmail(recruiterEmail);
 

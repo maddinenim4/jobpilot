@@ -16,24 +16,34 @@ public class ResumeSelectorService {
     @Autowired
     private AtsScoreService atsScoreService;
 
-    public Optional<Resume> selectBestResume(String jobDescription) {
-        List<Resume> resumes = resumeRepository.findByIsActiveTrue();
+    public Optional<Resume> selectBestResume(String jobDescription, Long userId) {
+        List<Resume> resumes = resumeRepository.findByUserId(userId);
+
         if (resumes.isEmpty()) {
-            System.out.println("ResumeSelectorService: No resumes in DB.");
+            System.out.println("ResumeSelectorService: No resumes found for user: " + userId);
             return Optional.empty();
         }
+
         Resume bestResume = null;
         double bestScore = -1;
+
         for (Resume resume : resumes) {
-            double score = atsScoreService.calculateScore(jobDescription, resume.getParsedText());
-            System.out.printf("ATS Score [%s]: %.2f%%%n", resume.getFileName(), score);
+            double score = atsScoreService.calculateScore(
+                jobDescription, resume.getExtractedText()
+            );
+            System.out.printf("ATS Score [%s]: %.2f%%%n",
+                resume.getFileName(), score);
+
             if (score > bestScore) {
                 bestScore = score;
                 bestResume = resume;
             }
         }
+
         System.out.printf("Selected Resume: %s (ATS Score: %.2f%%)%n",
-                bestResume != null ? bestResume.getFileName() : "None", bestScore);
+                bestResume != null ? bestResume.getFileName() : "None",
+                bestScore);
+
         return Optional.ofNullable(bestResume);
     }
 }
