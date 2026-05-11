@@ -1,6 +1,8 @@
 package com.jobpilot.backend.scraper;
 
 import com.jobpilot.backend.model.JobPosting;
+import com.jobpilot.backend.service.ResumeSelectorService;
+import com.jobpilot.backend.model.Resume;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,7 +11,9 @@ import org.jsoup.select.Elements;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import java.util.Optional;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +24,9 @@ import java.util.List;
 public class NvoidsScraper implements JobScraper {
 
     private static final String SEARCH_URL = "https://nvoids.com/search_sph.jsp";
+
+    @Autowired
+    private ResumeSelectorService resumeSelectorService;
 
     @Override
     public String getPortalName() {
@@ -138,24 +145,24 @@ public class NvoidsScraper implements JobScraper {
                     String detailHtml = driver.getPageSource();
                     Document detailDoc = Jsoup.parse(detailHtml);
 
-                    String recruiterEmail = "";
-                    Elements mailtoLinks = detailDoc.select("a[href^=mailto:]");
-                    if (!mailtoLinks.isEmpty()) {
-                        recruiterEmail = mailtoLinks.first().attr("href")
-                                .replace("mailto:", "").trim();
-                    }
-                    if (recruiterEmail.isEmpty()) {
-                        recruiterEmail = extractEmailFromText(detailDoc.text());
-                    }
-                    if (recruiterEmail.isEmpty()) {
-                        System.out.println("  Skipping (no email): " + jobTitle);
-                        continue;
-                    }
-
                     String description = detailDoc.select("body").text();
                     if (description.length() > 3000) {
                         description = description.substring(0, 3000);
                     }
+
+                    String recruiterEmail = extractRecruiterEmail(description, "me@nvoids.com");
+                    System.out.println("Sending application to: " + recruiterEmail);
+
+                    Optional<Resume> bestResume = resumeSelectorService
+                        .selectBestResume(description);
+
+                    if (bestResume.isEmpty()) {
+                        System.out.println("No resume found, skipping: " + jobTitle);
+                        continue;
+                    }
+
+                    String resumePath = bestResume.get().getFilePath();
+                    System.out.println("Using resume: " + bestResume.get().getFileName());
 
                     String company = extractCompanyFromEmail(recruiterEmail);
 
@@ -226,6 +233,27 @@ public class NvoidsScraper implements JobScraper {
             return email;
         }
         return "";
+    }
+
+    private String extractRecruiterEmail(String jobDescription, String defaultEmail) {
+        if (jobDescription == null) return defaultEmail;
+
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}"
+        );
+        java.util.regex.Matcher matcher = pattern.matcher(jobDescription);
+
+        while (matcher.find()) {
+            String email = matcher.group();
+            // Skip nvoids default emails
+            if (!email.contains("nvoids.com") && !email.contains("noreply")) {
+                System.out.println("Found recruiter email: " + email);
+                return email;
+            }
+        }
+
+        System.out.println("No recruiter email found, using default: " + defaultEmail);
+        return defaultEmail;
     }
 
     private String extractCompanyFromEmail(String email) {
